@@ -127,7 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Q1.cpp" />
+    <ClCompile Include="SearchManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Alert.h" />
