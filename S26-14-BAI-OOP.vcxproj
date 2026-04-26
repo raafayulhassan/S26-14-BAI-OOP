@@ -129,6 +129,18 @@
   <ItemGroup>
     <ClCompile Include="Q1.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Alert.h" />
+    <ClInclude Include="Budget.h" />
+    <ClInclude Include="Category.h" />
+    <ClInclude Include="Expense.h" />
+    <ClInclude Include="FileManager.h" />
+    <ClInclude Include="FinanceSystem.h" />
+    <ClInclude Include="Income.h" />
+    <ClInclude Include="Report.h" />
+    <ClInclude Include="SearchManager.h" />
+    <ClInclude Include="Transaction.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

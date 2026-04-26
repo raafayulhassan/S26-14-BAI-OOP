@@ -19,4 +19,36 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FinanceSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SearchManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Transaction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Income.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Expense.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Category.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Budget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Alert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Report.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

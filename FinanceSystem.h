@@ -11,13 +11,13 @@
 using namespace std;
 
 
+
 class FinanceSystem
 {
 
 private:
 
     Transaction* transactions;
-
     Budget* budgets;
 
 
@@ -29,7 +29,6 @@ private:
 
 
     SearchManager searchManager;
-
     FileManager fileManager;
 
 
@@ -51,6 +50,14 @@ public:
     void showAllTransactions();
 
     void showAllBudgets();
+
+
+
+    void searchTransactionByCategory(string categoryName);
+
+    void searchTransactionByDate(string date);
+
+    void searchTransactionByAmount(double amount);
 
 
 
