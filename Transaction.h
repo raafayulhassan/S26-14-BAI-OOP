@@ -42,6 +42,9 @@ public:
     string getDescription();
     string getCategoryName();
 
+    void addRecord();
+    void editRecord();
+    void deleteRecord();
 
 
     virtual void display();
