@@ -127,7 +127,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Alert.cpp" />
+    <ClCompile Include="Budget.cpp" />
+    <ClCompile Include="Category.cpp" />
+    <ClCompile Include="Expense.cpp" />
+    <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FinanceSystem.cpp" />
+    <ClCompile Include="Income.cpp" />
+    <ClCompile Include="Report.cpp" />
     <ClCompile Include="SearchManager.cpp" />
+    <ClCompile Include="Transaction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Alert.h" />

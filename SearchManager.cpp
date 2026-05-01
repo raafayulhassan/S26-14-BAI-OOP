@@ -26,6 +26,7 @@ void SearchManager::searchByCategory(Transaction transactions[], int size, strin
 
             found = true;
         }
+
     }
 
 

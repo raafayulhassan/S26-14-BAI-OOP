@@ -1,5 +1,5 @@
-#include"Transaction.h"
-#include"Category.h"
+#include "Transaction.h"
+#include "Category.h"
 using namespace std;
 /*
     int id;

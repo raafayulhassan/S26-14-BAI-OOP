@@ -1,4 +1,4 @@
-#include"Income.h"
+#include "Income.h"
 /*string source;
     string income;*/
 Income::Income() {
