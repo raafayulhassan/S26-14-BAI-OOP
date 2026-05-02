@@ -1,5 +1,7 @@
 #include "Transaction.h"
 #include "Category.h"
+#include <iostream>
+
 using namespace std;
 /*
     int id;
