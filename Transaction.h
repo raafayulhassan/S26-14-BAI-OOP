@@ -46,6 +46,9 @@ public:
     void editRecord();
     void deleteRecord();
 
+    double operator+(const Transaction& obj) const;
+    bool operator==(const Transaction& obj) const;
+    bool operator>(const Transaction& obj) const;
 
     virtual void display();
 

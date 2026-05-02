@@ -137,7 +137,29 @@ void Transaction:: deleteRecord() {
     }
 }
 
+double Transaction::operator+(const Transaction& obj) const {
+    double total = 0;
+    total = this->amount + obj.amount;
+    return total;
+}
 
+bool Transaction::operator==(const Transaction& obj) const {
+    if (this->id == obj.id) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool Transaction::operator>(const Transaction& obj) const {
+    if (this->amount > obj.amount) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
 
 void Transaction::display() {
