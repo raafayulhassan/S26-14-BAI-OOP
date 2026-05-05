@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Transaction.h"
+#include "transaction.h"
 
 
 
@@ -10,8 +10,7 @@ class Expense : public Transaction
 private:
 
     string paymentMethod;
-    string expenseType;
-    string  Notes;
+
 
 
 public:
