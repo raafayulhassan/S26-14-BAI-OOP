@@ -1,4 +1,4 @@
-#include "Budget.h"
+#include "budget.h"
 
 
 
@@ -74,6 +74,13 @@ double Budget::getLimitAmount()
 double Budget::getUsedAmount()
 {
     return usedAmount;
+}
+
+
+
+void Budget::addUsedAmount(double amount)
+{
+    usedAmount = usedAmount + amount;
 }
 
 

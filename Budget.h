@@ -41,6 +41,10 @@ public:
 
 
 
+    void addUsedAmount(double amount);
+
+
+
     void display();
 
 };

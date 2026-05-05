@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include "Budget.h"
+#include "budget.h"
 
 using namespace std;
 

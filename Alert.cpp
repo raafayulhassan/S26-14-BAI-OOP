@@ -1,4 +1,4 @@
-#include "Alert.h"
+#include "alert.h"
 
 
 
@@ -21,7 +21,7 @@ void Alert::checkBudget(Budget b)
     }
     else
     {
-        message = "Budget is still safe for category: " + b.getCategoryName();
+        message = "Budget is safe for category: " + b.getCategoryName();
     }
 }
 
