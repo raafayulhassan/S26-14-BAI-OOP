@@ -17,6 +17,7 @@ protected:
     string date;
     string description;
     string categoryName;
+    string transactionType;
 
 
 
@@ -24,7 +25,11 @@ public:
 
     Transaction();
 
-    Transaction(int i, double a, string d, string des, string c);
+    Transaction(int i, double a, string d, string des, string c, string type);
+
+
+
+    virtual ~Transaction();
 
 
 
@@ -33,6 +38,7 @@ public:
     void setDate(string d);
     void setDescription(string des);
     void setCategoryName(string c);
+    void setTransactionType(string type);
 
 
 
@@ -41,15 +47,22 @@ public:
     string getDate();
     string getDescription();
     string getCategoryName();
+    string getTransactionType();
 
-    void addRecord();
-    void editRecord();
-    void deleteRecord();
+    //void addRecord();
+    //void editRecord();
+    //void deleteRecord();
 
-    double operator+(const Transaction& obj) const;
-    bool operator==(const Transaction& obj) const;
-    bool operator>(const Transaction& obj) const;
+    //double operator+(const Transaction& obj) const;
+    //bool operator==(const Transaction& obj) const;
+    //bool operator>(const Transaction& obj) const;
+
 
     virtual void display();
 
 };
+
+
+   
+
+    

@@ -1,55 +1,48 @@
-#include "Expense.h"
+#include "expense.h"
+
+
+
 Expense::Expense() : Transaction()
 {
-    expenseType = "";
-    paymentMethod = "";
-    notes = "";
+    paymentMethod = "not set";
+    transactionType = "Expense";
 }
 
-Expense::Expense(int i, double a, string d, string des, string c,
-    string et, string pm, string n)
-    : Transaction(i, a, d, des, c)
+
+
+Expense::Expense(int i, double a, string d, string des, string c, string p)
+    : Transaction(i, a, d, des, c, "Expense")
 {
-    expenseType = et;
-    paymentMethod = pm;
-    notes = n;
+    paymentMethod = p;
 }
 
-void Expense::setExpenseType(string et)
+
+
+void Expense::setPaymentMethod(string p)
 {
-    expenseType = et;
+    paymentMethod = p;
 }
 
-void Expense::setPaymentMethod(string pm)
-{
-    paymentMethod = pm;
-}
 
-void Expense::setNotes(string n)
-{
-    notes = n;
-}
-
-string Expense::getExpenseType()
-{
-    return expenseType;
-}
 
 string Expense::getPaymentMethod()
 {
     return paymentMethod;
 }
 
-string Expense::getNotes()
-{
-    return notes;
-}
+
 
 void Expense::display()
 {
-    Transaction::display();
+    cout << "Expense Transaction" << endl;
+    cout << "-------------------" << endl;
 
-    cout << "Expense Type: " << expenseType << endl;
+    cout << "Transaction ID: " << id << endl;
+    cout << "Amount: " << amount << endl;
+    cout << "Date: " << date << endl;
+    cout << "Description: " << description << endl;
+    cout << "Category: " << categoryName << endl;
     cout << "Payment Method: " << paymentMethod << endl;
-    cout << "Notes: " << notes << endl;
+
+    cout << endl;
 }
