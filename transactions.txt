@@ -1,0 +1,15 @@
+1
+50000
+30-04-2026
+Monthly salary
+Salary
+2
+3000
+30-04-2026
+Food expense
+Food
+3
+1500
+30-04-2026
+Transport expense
+Transport

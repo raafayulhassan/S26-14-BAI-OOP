@@ -18,7 +18,7 @@ public:
 
     Expense();
 
-    Expense(int i, double a, string d, string des, string c, string p,string e,string n);
+    Expense(int i, double a, string d, string des, string c, string p);
 
 
 

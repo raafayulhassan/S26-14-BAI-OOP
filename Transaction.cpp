@@ -45,10 +45,10 @@ void Transaction::void setCategoryName(string c) {
 
 
 
-int Transaction:: getId() {
+int Transaction::getId() {
     return id;
 }
-int Transaction:: getAmount() {
+int Transaction::getAmount() {
     return amount;
 }
 string Transaction::getDate() {
@@ -57,7 +57,7 @@ string Transaction::getDate() {
 string Transaction::getDescription() {
     return description
 }
-string Transaction:: getCategoryName() {
+string Transaction::getCategoryName() {
     return categoryName;
 }
 
@@ -68,13 +68,13 @@ void Transaction::addRecord() {
     cout << "\nEnter transaction details:\n";
     cout << "Enter ID: ";
     cin >> id;
-    cout << "\nEnter amount (PKR): "<<endl;
+    cout << "\nEnter amount (PKR): " << endl;
     cin >> amount;
     if (amount < 0) {
         cout << "Invalid amount! Resetting to zero.";
         anount = 0;
     }
-    cout << "\nEnter date in DD/MM/YY: "<<;
+    cout << "\nEnter date in DD/MM/YY: " << ;
     cin >> date;
     cin.ignore();
     cout << "\nEnter description: ";
@@ -87,7 +87,7 @@ void Transaction::addRecord() {
 
 
 
-void Transaction:: editRecord() {
+void Transaction::editRecord() {
     cout << "Which field do you want to edit?(Enter integer value only) " << endl;
     cout << "1. Amount" << "\n2. Date" << "\n3. Description" << "\n4. Category";
     int f;
@@ -114,7 +114,7 @@ void Transaction:: editRecord() {
 
 
 
-void Transaction:: deleteRecord() {
+void Transaction::deleteRecord() {
     cout << "Are you sure you want to delete the record? Once deleted, you cannot restore! " << endl;
     cout << "Enter 1 if YES, 0 if NO" << endl;
     int c;
@@ -140,8 +140,8 @@ void Transaction:: deleteRecord() {
 
 void Transaction::display() {
     cout << "ID: " << id << endl;
-    cout << "Amount: " << amount<<endl;
-    cout << "Date: " << date<<endl;
+    cout << "Amount: " << amount << endl;
+    cout << "Date: " << date << endl;
     cout << "Description: " << description << endl;
-    cout << "Category: " << categoryName<<endl;
+    cout << "Category: " << categoryName << endl;
 }
