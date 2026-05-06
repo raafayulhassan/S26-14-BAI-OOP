@@ -23,6 +23,7 @@ void FileManager::saveTransactions(Transaction transactions[], int size)
         file << transactions[i].getDate() << endl;
         file << transactions[i].getDescription() << endl;
         file << transactions[i].getCategoryName() << endl;
+        file << transactions[i].getTransactionType() << endl; //new addition
     }
 
 
@@ -48,7 +49,7 @@ void FileManager::loadTransactions(Transaction transactions[], int& size, int ca
     string date;
     string description;
     string categoryName;
-
+    string transactionType; //new addition
 
     for (int i = 0; i < capacity; i++)
     {
@@ -61,9 +62,9 @@ void FileManager::loadTransactions(Transaction transactions[], int& size, int ca
             getline(file, date);
             getline(file, description);
             getline(file, categoryName);
+            getline(file, transactionType); //new addition
 
-
-            Transaction temp(id, amount, date, description, categoryName);
+            Transaction temp(id, amount, date, description, categoryName, transactionType); //new arguement
 
             transactions[size] = temp;
 
