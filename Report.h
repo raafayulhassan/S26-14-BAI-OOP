@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "Transaction.h"
-#include "Budget.h"
+#include "transaction.h"
+#include "budget.h"
 
 using namespace std;
 

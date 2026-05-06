@@ -157,6 +157,7 @@ private:
 
     void drawDashboard(sf::RenderWindow& window);
 
+    void drawStarterDashboard(sf::RenderWindow& window, string userName, int selectedMonth);
 
 
     void handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& window);

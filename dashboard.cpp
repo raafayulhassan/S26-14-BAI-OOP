@@ -1,5 +1,7 @@
 #include "dashboard.h"
 
+#include <optional>
+
 using namespace std;
 
 
@@ -138,7 +140,7 @@ void Dashboard::run()
         else
         {
             keepRunning = false;
-        }
+}
     }
 }
 
@@ -167,6 +169,7 @@ bool Dashboard::loadFont()
         return true;
     }
 
+    cout << "Font file not found." << endl;
 
 
     cout << "Font not found. Add arial.ttf or Roboto-Regular.ttf." << endl;
@@ -559,7 +562,7 @@ void Dashboard::saveReport(int index)
 
 
     for (int i = 0; i < domainCount; i++)
-    {
+{
         double percent = 0;
 
         if (totalActual > 0)
@@ -748,7 +751,11 @@ void Dashboard::drawRoundFill(sf::RenderWindow& window, float x, float y, float 
         return;
     }
 
+    sf::RectangleShape middleOne({ width - radius * 2, height });
+    middleOne.setPosition({ x + radius, y });
+    middleOne.setFillColor(color);
 
+    window.draw(middleOne);
 
     sf::RectangleShape one({ width - radius * 2, height });
     one.setPosition({ x + radius, y });
@@ -756,7 +763,11 @@ void Dashboard::drawRoundFill(sf::RenderWindow& window, float x, float y, float 
 
     window.draw(one);
 
+    sf::RectangleShape middleTwo({ width, height - radius * 2 });
+    middleTwo.setPosition({ x, y + radius });
+    middleTwo.setFillColor(color);
 
+    window.draw(middleTwo);
 
     sf::RectangleShape two({ width, height - radius * 2 });
     two.setPosition({ x, y + radius });
@@ -796,6 +807,8 @@ void Dashboard::drawRoundFill(sf::RenderWindow& window, float x, float y, float 
 // rounded boxes and cards
 void Dashboard::drawRoundBox(sf::RenderWindow& window, float x, float y, float width, float height, float radius, sf::Color fillColor, sf::Color borderColor)
 {
+    // rounded border box
+
     drawRoundFill(window, x, y, width, height, radius, borderColor);
 
     drawRoundFill(window, x + 1, y + 1, width - 2, height - 2, radius - 1, fillColor);
@@ -857,6 +870,7 @@ void Dashboard::drawButton(sf::RenderWindow& window, float x, float y, float wid
 }
 
 
+    sf::Text text(font);
 
 // input fields
 void Dashboard::drawInputBox(sf::RenderWindow& window, float x, float y, float width, float height, string label, string value, bool selected)
@@ -876,19 +890,23 @@ void Dashboard::drawInputBox(sf::RenderWindow& window, float x, float y, float w
 
     drawRoundBox(window, x, y, width, height, 18, sf::Color(4, 4, 6), border);
 
+    window.draw(text);
+}
 
 
     string shown = value;
 
     if (selected == true)
-    {
+{
         shown = shown + "|";
     }
 
     drawText(window, shortText(shown, 32), 16, x + 16, y + 15, sf::Color(240, 241, 245), false);
 }
 
+    drawRoundBox(window, x, y, width, height, 24, sf::Color(10, 10, 12), sf::Color(48, 48, 55));
 
+    drawRoundFill(window, x + 20, y + 16, 40, 4, 2, sf::Color(45, 212, 191));
 
 // top summary cards
 void Dashboard::drawCard(sf::RenderWindow& window, float x, float y, float width, float height, string title, string value, string note, sf::Color accent)
@@ -911,7 +929,10 @@ void Dashboard::drawMonthMenu(sf::RenderWindow& window, float startX, float star
 {
     int num = 0;
 
+    float startX = 900;
+    float startY = 132;
 
+    int monthNumber = 0;
 
     for (int row = 0; row < 4; row++)
     {
@@ -1036,8 +1057,8 @@ bool Dashboard::runNameWindow()
 
                         return true;
                     }
-                }
-            }
+        }
+    }
 
 
 
@@ -1053,14 +1074,14 @@ bool Dashboard::runNameWindow()
                     if (isInside(mx, my, 125, 242, 510, 56))
                     {
                         activeField = 0;
-                    }
+}
 
 
 
                     if (isInside(mx, my, 125, 324, 510, 46))
                     {
                         if (nameText != "")
-                        {
+{
                             userName = nameText;
 
                             saveProfile();
@@ -1076,7 +1097,7 @@ bool Dashboard::runNameWindow()
 
 
 
-        window.clear(sf::Color(0, 0, 0));
+    window.clear(sf::Color(0, 0, 0));
 
 
 
@@ -1134,7 +1155,11 @@ bool Dashboard::runDomainWindow()
                 return false;
             }
 
+    sf::RectangleShape topBar({ 1360, 78 });
+    topBar.setPosition({ 0, 0 });
+    topBar.setFillColor(sf::Color(3, 3, 5));
 
+    window.draw(topBar);
 
             if (const auto* text = event->getIf<sf::Event::TextEntered>())
             {
@@ -1149,6 +1174,7 @@ bool Dashboard::runDomainWindow()
                 }
             }
 
+    drawRoundFill(window, 0, 76, 1360, 2, 0, sf::Color(45, 212, 191));
 
 
             if (const auto* key = event->getIf<sf::Event::KeyPressed>())
@@ -1160,6 +1186,7 @@ bool Dashboard::runDomainWindow()
                     return false;
                 }
 
+    drawText(window, "Welcome, " + shortText(userName, 20), 14, 34, 50, sf::Color(160, 165, 175), false);
 
 
                 if (key->code == sf::Keyboard::Key::Tab)
@@ -1172,7 +1199,9 @@ bool Dashboard::runDomainWindow()
                     }
                 }
 
+    drawText(window, "Starter Dashboard", 24, 32, 110, sf::Color(245, 245, 248), true);
 
+    drawText(window, "This is first SFML layout before final merging.", 14, 32, 143, sf::Color(150, 155, 165), false);
 
                 if (key->code == sf::Keyboard::Key::Enter)
                 {
@@ -1193,7 +1222,9 @@ bool Dashboard::runDomainWindow()
                 }
             }
 
+    drawCard(window, 668, 205, 290, 132, "Actual Spend", money(0), "Expense tracking placeholder");
 
+    drawCard(window, 986, 205, 290, 132, "Savings", money(0), "Final report placeholder");
 
             if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>())
             {
@@ -1203,13 +1234,16 @@ bool Dashboard::runDomainWindow()
                     float my = static_cast<float>(mouse->position.y);
 
 
+    // left panel
 
                     if (isInside(mx, my, 64, 214, 380, 56))
                     {
                         activeField = 0;
                     }
 
+    drawText(window, "Input Area", 22, 62, 420, sf::Color(245, 245, 248), true);
 
+    drawText(window, "created the visual section.", 14, 62, 456, sf::Color(155, 160, 170), false);
 
                     if (isInside(mx, my, 64, 304, 380, 56))
                     {
@@ -1236,7 +1270,9 @@ bool Dashboard::runDomainWindow()
                         }
                     }
 
+    drawRoundBox(window, 660, 380, 668, 300, 28, sf::Color(10, 10, 12), sf::Color(48, 48, 55));
 
+    drawText(window, "Month Selection", 22, 690, 420, sf::Color(245, 245, 248), true);
 
                     if (isInside(mx, my, 64, 610, 380, 48))
                     {
@@ -1253,10 +1289,12 @@ bool Dashboard::runDomainWindow()
             }
         }
 
+    drawMonthMenu(window, selectedMonth);
 
 
         window.clear(sf::Color(0, 0, 0));
 
+    // footer message
 
 
         drawPanel(window, 34, 36, 912, 636);
@@ -1298,19 +1336,19 @@ bool Dashboard::runDomainWindow()
         if (count > 10)
         {
             count = 10;
-        }
+}
 
 
 
         if (count == 0)
-        {
+{
             drawText(window, "No domains added yet.", 15, 510, 278, sf::Color(120, 125, 135), false);
         }
 
 
 
         for (int i = 0; i < count; i++)
-        {
+    {
             float y = 270 + i * 34;
 
 
@@ -1320,14 +1358,17 @@ bool Dashboard::runDomainWindow()
             drawText(window, shortText(domainName[i], 22), 13, 528, y + 6, sf::Color(246, 247, 250), true);
 
             drawText(window, money(domainLimit[i]), 13, 760, y + 6, sf::Color(160, 165, 176), false);
-        }
+    }
 
+    sf::RenderWindow window(sf::VideoMode({ 1360, 768 }), "Starter Dashboard");
 
+    window.setFramerateLimit(60);
 
         window.display();
     }
 
 
+    string userName = "User";
 
     return false;
 }
@@ -1404,7 +1445,7 @@ void Dashboard::runMainWindow()
                         if (activeField > 1)
                         {
                             activeField = 0;
-                        }
+            }
                     }
                 }
 
@@ -1993,14 +2034,14 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
 
 
 
-        int monthNumber = 0;
+                    int monthNumber = 0;
 
 
 
-        for (int row = 0; row < 4; row++)
-        {
-            for (int col = 0; col < 3; col++)
-            {
+                    for (int row = 0; row < 4; row++)
+                    {
+                        for (int col = 0; col < 3; col++)
+                        {
                 if (isInside(mouseX, mouseY, 54 + col * 120, 635 + row * 40, 112, 34))
                 {
                     saveMonth(selectedMonth);
@@ -2127,16 +2168,16 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
             for (int col = 0; col < 3; col++)
             {
                 if (isInside(mouseX, mouseY, 54 + col * 120, 448 + row * 40, 112, 34))
-                {
+                            {
                     saveMonth(selectedMonth);
 
-                    selectedMonth = monthNumber;
+                                selectedMonth = monthNumber;
 
                     return;
-                }
+                            }
 
-                monthNumber++;
-            }
+                            monthNumber++;
+                        }
         }
 
 
@@ -2146,9 +2187,9 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
             selectedStep = 2;
 
             return;
-        }
-    }
-}
+                    }
+                }
+            }
 
 
 
@@ -2165,7 +2206,7 @@ void Dashboard::handleEnterKey()
         selectedStep = 2;
 
         activeField = 2;
-    }
+        }
 
 
 
