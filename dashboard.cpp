@@ -1,7 +1,5 @@
 #include "dashboard.h"
 
-#include <optional>
-
 using namespace std;
 
 
@@ -140,7 +138,7 @@ void Dashboard::run()
         else
         {
             keepRunning = false;
-}
+        }
     }
 }
 
@@ -169,7 +167,6 @@ bool Dashboard::loadFont()
         return true;
     }
 
-    cout << "Font file not found." << endl;
 
 
     cout << "Font not found. Add arial.ttf or Roboto-Regular.ttf." << endl;
@@ -562,7 +559,7 @@ void Dashboard::saveReport(int index)
 
 
     for (int i = 0; i < domainCount; i++)
-{
+    {
         double percent = 0;
 
         if (totalActual > 0)
@@ -584,11 +581,289 @@ void Dashboard::saveReport(int index)
 
 
 
+
+// creates annual report text file
+void Dashboard::saveAnnualReport()
+{
+    ofstream file;
+
+    file.open("annual_report.txt");
+
+
+
+    double totalSalary = 0;
+    double totalSpendLimit = 0;
+    double totalActual = 0;
+
+
+
+    file << "Annual Financial Report" << endl;
+    file << "Name: " << userName << endl;
+    file << endl;
+
+    file << "Month | Salary | Spend Limit | Actual Spend | Savings" << endl;
+
+
+
+    for (int i = 0; i < 12; i++)
+    {
+        double monthActual = getTotalActual(i);
+        double monthSavings = monthlySalary[i] - monthActual;
+
+        totalSalary = totalSalary + monthlySalary[i];
+        totalSpendLimit = totalSpendLimit + monthlySpendLimit[i];
+        totalActual = totalActual + monthActual;
+
+        file << getMonthName(i) << " | "
+            << monthlySalary[i] << " | "
+            << monthlySpendLimit[i] << " | "
+            << monthActual << " | "
+            << monthSavings << endl;
+    }
+
+
+
+    file << endl;
+    file << "Yearly Summary" << endl;
+    file << "Total Salary: " << totalSalary << endl;
+    file << "Total Spending Limit: " << totalSpendLimit << endl;
+    file << "Total Actual Spend: " << totalActual << endl;
+    file << "Total Savings: " << totalSalary - totalActual << endl;
+    file << endl;
+
+    file << "Category Wise Annual Spending" << endl;
+    file << "Category | Limit | Actual | Difference" << endl;
+
+
+
+    for (int i = 0; i < domainCount; i++)
+    {
+        double annualActual = 0;
+        double annualLimit = domainLimit[i] * 12;
+
+        for (int j = 0; j < 12; j++)
+        {
+            annualActual = annualActual + actualSpend[j][i];
+        }
+
+        file << domainName[i] << " | "
+            << annualLimit << " | "
+            << annualActual << " | "
+            << annualLimit - annualActual << endl;
+    }
+
+
+
+    file.close();
+
+    cout << "Annual report generated successfully." << endl;
+}
+
+
+
+
+// shows annual report in a separate window
+void Dashboard::showAnnualReportWindow()
+{
+    sf::RenderWindow reportWindow(sf::VideoMode({ 1100, 790 }), "Annual Report");
+
+    reportWindow.setFramerateLimit(60);
+
+
+
+    while (reportWindow.isOpen())
+    {
+        while (const optional<sf::Event> event = reportWindow.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+            {
+                reportWindow.close();
+            }
+
+
+
+            if (const auto* key = event->getIf<sf::Event::KeyPressed>())
+            {
+                if (key->code == sf::Keyboard::Key::Escape)
+                {
+                    reportWindow.close();
+                }
+            }
+
+
+
+            if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>())
+            {
+                if (mouse->button == sf::Mouse::Button::Left)
+                {
+                    float mx = static_cast<float>(mouse->position.x);
+                    float my = static_cast<float>(mouse->position.y);
+
+                    if (isInside(mx, my, 860, 710, 170, 42))
+                    {
+                        reportWindow.close();
+                    }
+                }
+            }
+        }
+
+
+
+        reportWindow.clear(sf::Color(0, 0, 0));
+
+
+
+        drawPanel(reportWindow, 30, 30, 1040, 730);
+
+        drawRoundFill(reportWindow, 30, 30, 1040, 3, 1, sf::Color(45, 212, 191));
+
+
+
+        drawText(reportWindow, "Annual Financial Report", 30, 60, 60, sf::Color(246, 247, 250), true);
+
+        drawText(reportWindow, "Name: " + userName, 15, 60, 100, sf::Color(160, 165, 176), false);
+
+
+
+        double totalSalary = 0;
+        double totalSpendLimit = 0;
+        double totalActual = 0;
+
+
+
+        for (int i = 0; i < 12; i++)
+        {
+            totalSalary = totalSalary + monthlySalary[i];
+            totalSpendLimit = totalSpendLimit + monthlySpendLimit[i];
+            totalActual = totalActual + getTotalActual(i);
+        }
+
+
+
+        drawPanel(reportWindow, 60, 145, 300, 130);
+        drawRoundFill(reportWindow, 80, 161, 38, 4, 2, sf::Color(45, 212, 191));
+        drawText(reportWindow, "Total Salary", 14, 80, 185, sf::Color(165, 170, 180), false);
+        drawText(reportWindow, money(totalSalary), 24, 80, 217, sf::Color(242, 243, 248), true);
+        drawText(reportWindow, "full year salary", 11, 80, 252, sf::Color(130, 135, 145), false);
+
+
+
+        drawPanel(reportWindow, 395, 145, 300, 130);
+        drawRoundFill(reportWindow, 415, 161, 38, 4, 2, sf::Color(255, 77, 141));
+        drawText(reportWindow, "Total Actual Spend", 14, 415, 185, sf::Color(165, 170, 180), false);
+        drawText(reportWindow, money(totalActual), 24, 415, 217, sf::Color(242, 243, 248), true);
+        drawText(reportWindow, "full year spending", 11, 415, 252, sf::Color(130, 135, 145), false);
+
+
+
+        drawPanel(reportWindow, 730, 145, 300, 130);
+        drawRoundFill(reportWindow, 750, 161, 38, 4, 2, (totalSalary - totalActual) < 0 ? sf::Color(255, 77, 141) : sf::Color(52, 211, 153));
+        drawText(reportWindow, "Total Savings", 14, 750, 185, sf::Color(165, 170, 180), false);
+        drawText(reportWindow, money(totalSalary - totalActual), 24, 750, 217, sf::Color(242, 243, 248), true);
+        drawText(reportWindow, "salary left after spending", 11, 750, 252, sf::Color(130, 135, 145), false);
+
+
+
+        drawText(reportWindow, "Monthly Summary", 20, 60, 315, sf::Color(246, 247, 250), true);
+
+
+
+        drawText(reportWindow, "Month", 13, 70, 350, sf::Color(160, 165, 176), false);
+
+        drawText(reportWindow, "Salary", 13, 190, 350, sf::Color(160, 165, 176), false);
+
+        drawText(reportWindow, "Limit", 13, 360, 350, sf::Color(160, 165, 176), false);
+
+        drawText(reportWindow, "Actual", 13, 530, 350, sf::Color(160, 165, 176), false);
+
+        drawText(reportWindow, "Savings", 13, 700, 350, sf::Color(160, 165, 176), false);
+
+
+
+        for (int i = 0; i < 12; i++)
+        {
+            float y = static_cast<float>(375 + i * 23);
+
+            double monthActual = getTotalActual(i);
+            double monthSavings = monthlySalary[i] - monthActual;
+
+
+
+            sf::RectangleShape row({ 790, 22 });
+            row.setPosition({ 60, y });
+            row.setFillColor(sf::Color(5, 5, 7));
+            row.setOutlineThickness(1);
+            row.setOutlineColor(sf::Color(42, 42, 48));
+
+            reportWindow.draw(row);
+
+
+
+            drawText(reportWindow, getMonthName(i), 12, 70, y + 3, sf::Color(246, 247, 250), true);
+
+            drawText(reportWindow, money(monthlySalary[i]), 12, 190, y + 3, sf::Color(218, 220, 226), false);
+
+            drawText(reportWindow, money(monthlySpendLimit[i]), 12, 360, y + 3, sf::Color(218, 220, 226), false);
+
+            drawText(reportWindow, money(monthActual), 12, 530, y + 3, sf::Color(218, 220, 226), false);
+
+            drawText(reportWindow, money(monthSavings), 12, 700, y + 3, monthSavings < 0 ? sf::Color(255, 77, 141) : sf::Color(52, 211, 153), false);
+        }
+
+
+
+        drawText(reportWindow, "Category Wise Annual Spending", 20, 60, 670, sf::Color(246, 247, 250), true);
+
+
+
+        int count = domainCount;
+
+        if (count > 4)
+        {
+            count = 4;
+        }
+
+
+
+        for (int i = 0; i < count; i++)
+        {
+            double annualActual = 0;
+
+            for (int j = 0; j < 12; j++)
+            {
+                annualActual = annualActual + actualSpend[j][i];
+            }
+
+
+
+            float x = static_cast<float>(60 + i * 190);
+
+
+
+            drawText(reportWindow, shortText(domainName[i], 13), 12, x, 702, sf::Color(246, 247, 250), true);
+
+            drawText(reportWindow, money(annualActual), 12, x, 724, sf::Color(160, 165, 176), false);
+        }
+
+
+
+        drawButton(reportWindow, 860, 710, 170, 42, "Close", false);
+
+
+
+        reportWindow.display();
+    }
+}
+
+
+
+
 // clean slate reset button
 void Dashboard::clearEverything()
 {
     remove("profile.txt");
     remove("budget_domains.txt");
+    remove("annual_report.txt");
 
 
 
@@ -751,11 +1026,7 @@ void Dashboard::drawRoundFill(sf::RenderWindow& window, float x, float y, float 
         return;
     }
 
-    sf::RectangleShape middleOne({ width - radius * 2, height });
-    middleOne.setPosition({ x + radius, y });
-    middleOne.setFillColor(color);
 
-    window.draw(middleOne);
 
     sf::RectangleShape one({ width - radius * 2, height });
     one.setPosition({ x + radius, y });
@@ -763,11 +1034,7 @@ void Dashboard::drawRoundFill(sf::RenderWindow& window, float x, float y, float 
 
     window.draw(one);
 
-    sf::RectangleShape middleTwo({ width, height - radius * 2 });
-    middleTwo.setPosition({ x, y + radius });
-    middleTwo.setFillColor(color);
 
-    window.draw(middleTwo);
 
     sf::RectangleShape two({ width, height - radius * 2 });
     two.setPosition({ x, y + radius });
@@ -807,8 +1074,6 @@ void Dashboard::drawRoundFill(sf::RenderWindow& window, float x, float y, float 
 // rounded boxes and cards
 void Dashboard::drawRoundBox(sf::RenderWindow& window, float x, float y, float width, float height, float radius, sf::Color fillColor, sf::Color borderColor)
 {
-    // rounded border box
-
     drawRoundFill(window, x, y, width, height, radius, borderColor);
 
     drawRoundFill(window, x + 1, y + 1, width - 2, height - 2, radius - 1, fillColor);
@@ -870,7 +1135,6 @@ void Dashboard::drawButton(sf::RenderWindow& window, float x, float y, float wid
 }
 
 
-    sf::Text text(font);
 
 // input fields
 void Dashboard::drawInputBox(sf::RenderWindow& window, float x, float y, float width, float height, string label, string value, bool selected)
@@ -890,23 +1154,23 @@ void Dashboard::drawInputBox(sf::RenderWindow& window, float x, float y, float w
 
     drawRoundBox(window, x, y, width, height, 18, sf::Color(4, 4, 6), border);
 
-    window.draw(text);
-}
 
 
     string shown = value;
 
+
+
     if (selected == true)
-{
+    {
         shown = shown + "|";
     }
+
+
 
     drawText(window, shortText(shown, 32), 16, x + 16, y + 15, sf::Color(240, 241, 245), false);
 }
 
-    drawRoundBox(window, x, y, width, height, 24, sf::Color(10, 10, 12), sf::Color(48, 48, 55));
 
-    drawRoundFill(window, x + 20, y + 16, 40, 4, 2, sf::Color(45, 212, 191));
 
 // top summary cards
 void Dashboard::drawCard(sf::RenderWindow& window, float x, float y, float width, float height, string title, string value, string note, sf::Color accent)
@@ -929,21 +1193,21 @@ void Dashboard::drawMonthMenu(sf::RenderWindow& window, float startX, float star
 {
     int num = 0;
 
-    float startX = 900;
-    float startY = 132;
 
-    int monthNumber = 0;
 
     for (int row = 0; row < 4; row++)
     {
         for (int col = 0; col < 3; col++)
         {
-            float x = startX + col * 120;
-            float y = startY + row * 40;
+            if (num < 12)
+            {
+                float x = startX + col * 120;
+                float y = startY + row * 40;
 
-            drawButton(window, x, y, 112, 34, months[num], selectedMonth == num);
+                drawButton(window, x, y, 112, 34, months[num], selectedMonth == num);
 
-            num++;
+                num++;
+            }
         }
     }
 }
@@ -1057,8 +1321,8 @@ bool Dashboard::runNameWindow()
 
                         return true;
                     }
-        }
-    }
+                }
+            }
 
 
 
@@ -1074,14 +1338,14 @@ bool Dashboard::runNameWindow()
                     if (isInside(mx, my, 125, 242, 510, 56))
                     {
                         activeField = 0;
-}
+                    }
 
 
 
                     if (isInside(mx, my, 125, 324, 510, 46))
                     {
                         if (nameText != "")
-{
+                        {
                             userName = nameText;
 
                             saveProfile();
@@ -1097,7 +1361,7 @@ bool Dashboard::runNameWindow()
 
 
 
-    window.clear(sf::Color(0, 0, 0));
+        window.clear(sf::Color(0, 0, 0));
 
 
 
@@ -1155,11 +1419,7 @@ bool Dashboard::runDomainWindow()
                 return false;
             }
 
-    sf::RectangleShape topBar({ 1360, 78 });
-    topBar.setPosition({ 0, 0 });
-    topBar.setFillColor(sf::Color(3, 3, 5));
 
-    window.draw(topBar);
 
             if (const auto* text = event->getIf<sf::Event::TextEntered>())
             {
@@ -1174,7 +1434,6 @@ bool Dashboard::runDomainWindow()
                 }
             }
 
-    drawRoundFill(window, 0, 76, 1360, 2, 0, sf::Color(45, 212, 191));
 
 
             if (const auto* key = event->getIf<sf::Event::KeyPressed>())
@@ -1186,7 +1445,6 @@ bool Dashboard::runDomainWindow()
                     return false;
                 }
 
-    drawText(window, "Welcome, " + shortText(userName, 20), 14, 34, 50, sf::Color(160, 165, 175), false);
 
 
                 if (key->code == sf::Keyboard::Key::Tab)
@@ -1199,9 +1457,7 @@ bool Dashboard::runDomainWindow()
                     }
                 }
 
-    drawText(window, "Starter Dashboard", 24, 32, 110, sf::Color(245, 245, 248), true);
 
-    drawText(window, "This is first SFML layout before final merging.", 14, 32, 143, sf::Color(150, 155, 165), false);
 
                 if (key->code == sf::Keyboard::Key::Enter)
                 {
@@ -1222,9 +1478,7 @@ bool Dashboard::runDomainWindow()
                 }
             }
 
-    drawCard(window, 668, 205, 290, 132, "Actual Spend", money(0), "Expense tracking placeholder");
 
-    drawCard(window, 986, 205, 290, 132, "Savings", money(0), "Final report placeholder");
 
             if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>())
             {
@@ -1234,16 +1488,13 @@ bool Dashboard::runDomainWindow()
                     float my = static_cast<float>(mouse->position.y);
 
 
-    // left panel
 
                     if (isInside(mx, my, 64, 214, 380, 56))
                     {
                         activeField = 0;
                     }
 
-    drawText(window, "Input Area", 22, 62, 420, sf::Color(245, 245, 248), true);
 
-    drawText(window, "created the visual section.", 14, 62, 456, sf::Color(155, 160, 170), false);
 
                     if (isInside(mx, my, 64, 304, 380, 56))
                     {
@@ -1270,9 +1521,7 @@ bool Dashboard::runDomainWindow()
                         }
                     }
 
-    drawRoundBox(window, 660, 380, 668, 300, 28, sf::Color(10, 10, 12), sf::Color(48, 48, 55));
 
-    drawText(window, "Month Selection", 22, 690, 420, sf::Color(245, 245, 248), true);
 
                     if (isInside(mx, my, 64, 610, 380, 48))
                     {
@@ -1289,12 +1538,10 @@ bool Dashboard::runDomainWindow()
             }
         }
 
-    drawMonthMenu(window, selectedMonth);
 
 
         window.clear(sf::Color(0, 0, 0));
 
-    // footer message
 
 
         drawPanel(window, 34, 36, 912, 636);
@@ -1336,20 +1583,20 @@ bool Dashboard::runDomainWindow()
         if (count > 10)
         {
             count = 10;
-}
+        }
 
 
 
         if (count == 0)
-{
+        {
             drawText(window, "No domains added yet.", 15, 510, 278, sf::Color(120, 125, 135), false);
         }
 
 
 
         for (int i = 0; i < count; i++)
-    {
-            float y = 270 + i * 34;
+        {
+            float y = static_cast<float>(270 + i * 34);
 
 
 
@@ -1358,17 +1605,14 @@ bool Dashboard::runDomainWindow()
             drawText(window, shortText(domainName[i], 22), 13, 528, y + 6, sf::Color(246, 247, 250), true);
 
             drawText(window, money(domainLimit[i]), 13, 760, y + 6, sf::Color(160, 165, 176), false);
-    }
+        }
 
-    sf::RenderWindow window(sf::VideoMode({ 1360, 768 }), "Starter Dashboard");
 
-    window.setFramerateLimit(60);
 
         window.display();
     }
 
 
-    string userName = "User";
 
     return false;
 }
@@ -1445,7 +1689,7 @@ void Dashboard::runMainWindow()
                         if (activeField > 1)
                         {
                             activeField = 0;
-            }
+                        }
                     }
                 }
 
@@ -1551,11 +1795,13 @@ void Dashboard::drawLimitPanel(sf::RenderWindow& window)
 
     for (int i = 0; i < count; i++)
     {
-        drawRoundBox(window, 54, 490 + i * 36, 340, 30, 15, sf::Color(4, 4, 6), sf::Color(48, 48, 55));
+        float y = static_cast<float>(490 + i * 36);
 
-        drawText(window, shortText(domainName[i], 18), 13, 70, 496 + i * 36, sf::Color(246, 247, 250), true);
+        drawRoundBox(window, 54, y, 340, 30, 15, sf::Color(4, 4, 6), sf::Color(48, 48, 55));
 
-        drawText(window, money(domainLimit[i]), 13, 265, 496 + i * 36, sf::Color(160, 165, 176), false);
+        drawText(window, shortText(domainName[i], 18), 13, 70, y + 6, sf::Color(246, 247, 250), true);
+
+        drawText(window, money(domainLimit[i]), 13, 265, y + 6, sf::Color(160, 165, 176), false);
     }
 
 
@@ -1609,7 +1855,9 @@ void Dashboard::drawActualPanel(sf::RenderWindow& window)
 
     for (int i = 0; i < count; i++)
     {
-        drawButton(window, 54, 468 + i * 42, 340, 34, shortText(domainName[i], 28), selectedDomain == i);
+        float y = static_cast<float>(468 + i * 42);
+
+        drawButton(window, 54, y, 340, 34, shortText(domainName[i], 28), selectedDomain == i);
     }
 
 
@@ -1719,7 +1967,7 @@ void Dashboard::drawReportPanel(sf::RenderWindow& window)
 
 
 
-        float y = 570 + i * 36;
+        float y = static_cast<float>(570 + i * 36);
 
 
 
@@ -1746,71 +1994,13 @@ void Dashboard::drawReportPanel(sf::RenderWindow& window)
 
 
 
-    drawText(window, "Expense Bars", 18, 496, 758, sf::Color(246, 247, 250), true);
-
-    drawText(window, "Bars show each category share of total spending.", 12, 496, 782, sf::Color(160, 165, 176), false);
-
-
-
-    int barCount = domainCount;
-
-
-
-    if (barCount > 3)
-    {
-        barCount = 3;
-    }
-
-
-
-    for (int i = 0; i < barCount; i++)
-    {
-        double ratio = 0;
-
-
-
-        if (spend > 0)
-        {
-            ratio = actualSpend[selectedMonth][i] / spend;
-        }
-
-
-
-        sf::Color color = sf::Color(45, 212, 191);
-
-
-
-        if (actualSpend[selectedMonth][i] > domainLimit[i])
-        {
-            color = sf::Color(255, 77, 141);
-        }
-        else if (ratio > 0.35)
-        {
-            color = sf::Color(190, 120, 255);
-        }
-
-
-
-        float y = 808 + i * 25;
-
-
-
-        drawText(window, shortText(domainName[i], 12), 13, 496, y - 4, sf::Color(246, 247, 250), true);
-
-        drawBar(window, 640, y, 560, 12, ratio, color);
-
-        drawText(window, percentText(ratio * 100), 12, 1215, y - 4, sf::Color(160, 165, 176), false);
-    }
-
-
-
     if (left < 0)
     {
-        drawText(window, "Insight: spending limit exceeded by " + money(-left) + ".", 13, 835, 758, sf::Color(255, 77, 141), true);
+        drawText(window, "Insight: spending limit exceeded by " + money(-left) + ".", 14, 496, 770, sf::Color(255, 77, 141), true);
     }
     else
     {
-        drawText(window, "Insight: you still have " + money(left) + " left from your spending limit.", 13, 835, 758, sf::Color(52, 211, 153), true);
+        drawText(window, "Insight: you still have " + money(left) + " left from your spending limit.", 14, 496, 770, sf::Color(52, 211, 153), true);
     }
 }
 
@@ -1896,8 +2086,9 @@ void Dashboard::drawDashboard(sf::RenderWindow& window)
 
 
 
-        drawButton(window, 54, 812, 340, 40, "Back to Actuals", false);
+        drawButton(window, 54, 812, 160, 40, "Back", false);
 
+        drawButton(window, 234, 812, 160, 40, "Annual Report", false);
 
 
         drawReportPanel(window);
@@ -1969,7 +2160,7 @@ void Dashboard::drawDashboard(sf::RenderWindow& window)
 
 
 
-            float y = 580 + i * 50;
+            float y = static_cast<float>(580 + i * 50);
 
 
 
@@ -2034,14 +2225,14 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
 
 
 
-                    int monthNumber = 0;
+        int monthNumber = 0;
 
 
 
-                    for (int row = 0; row < 4; row++)
-                    {
-                        for (int col = 0; col < 3; col++)
-                        {
+        for (int row = 0; row < 4; row++)
+        {
+            for (int col = 0; col < 3; col++)
+            {
                 if (isInside(mouseX, mouseY, 54 + col * 120, 635 + row * 40, 112, 34))
                 {
                     saveMonth(selectedMonth);
@@ -2113,7 +2304,9 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
 
         for (int i = 0; i < count; i++)
         {
-            if (isInside(mouseX, mouseY, 54, 468 + i * 42, 340, 34))
+            float y = static_cast<float>(468 + i * 42);
+
+            if (isInside(mouseX, mouseY, 54, y, 340, 34))
             {
                 selectedDomain = i;
 
@@ -2168,28 +2361,41 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
             for (int col = 0; col < 3; col++)
             {
                 if (isInside(mouseX, mouseY, 54 + col * 120, 448 + row * 40, 112, 34))
-                            {
+                {
                     saveMonth(selectedMonth);
 
-                                selectedMonth = monthNumber;
+                    selectedMonth = monthNumber;
 
                     return;
-                            }
+                }
 
-                            monthNumber++;
-                        }
+                monthNumber++;
+            }
         }
 
 
 
-        if (isInside(mouseX, mouseY, 54, 812, 340, 40))
+        if (isInside(mouseX, mouseY, 234, 812, 160, 40))
+        {
+            saveMonth(selectedMonth);
+
+            saveAnnualReport();
+
+            showAnnualReportWindow();
+
+            return;
+        }
+
+
+
+        if (isInside(mouseX, mouseY, 54, 812, 160, 40))
         {
             selectedStep = 2;
 
             return;
-                    }
-                }
-            }
+        }
+    }
+}
 
 
 
@@ -2206,7 +2412,7 @@ void Dashboard::handleEnterKey()
         selectedStep = 2;
 
         activeField = 2;
-        }
+    }
 
 
 

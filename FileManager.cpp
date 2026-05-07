@@ -104,6 +104,9 @@ bool FileManager::loadTransactionsFromFile(Transaction transactions[], int& size
             getline(file, categoryName);
             getline(file, transactionType); //new addition
 
+            int id = stoi(idText);
+            double amount = stod(amountText);
+
             Transaction temp(id, amount, date, description, categoryName, transactionType); //new arguement
 
             transactions[size] = temp;

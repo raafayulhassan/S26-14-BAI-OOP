@@ -60,8 +60,6 @@ public:
 
     Dashboard();
 
-
-
     void run();
 
 
@@ -106,6 +104,10 @@ private:
 
     void saveReport(int index);
 
+    void saveAnnualReport();
+
+    void showAnnualReportWindow();
+
     void clearEverything();
 
 
@@ -119,11 +121,12 @@ private:
     void drawCenteredText(sf::RenderWindow& window, string textValue, int size, float x, float y, float width, float height, sf::Color color, bool bold);
 
     void drawRoundFill(sf::RenderWindow& window, float x, float y, float width, float height, float radius, sf::Color color);
+
+    void drawRoundBox(sf::RenderWindow& window, float x, float y, float width, float height, float radius, sf::Color fillColor, sf::Color borderColor);
+
     void drawPanel(sf::RenderWindow& window, float x, float y, float width, float height);
 
     void drawBar(sf::RenderWindow& window, float x, float y, float width, float height, double ratio, sf::Color color);
-
-    void drawRoundBox(sf::RenderWindow& window, float x, float y, float width, float height, float radius, sf::Color fillColor, sf::Color borderColor);
 
     void drawButton(sf::RenderWindow& window, float x, float y, float width, float height, string textValue, bool selected);
 
@@ -157,7 +160,6 @@ private:
 
     void drawDashboard(sf::RenderWindow& window);
 
-    void drawStarterDashboard(sf::RenderWindow& window, string userName, int selectedMonth);
 
 
     void handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& window);
