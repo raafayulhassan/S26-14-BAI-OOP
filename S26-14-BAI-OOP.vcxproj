@@ -150,7 +150,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Report.cpp" />
     <ClCompile Include="SearchManager.cpp" />
-    <ClCompile Include="testingsfml.cpp" />
     <ClCompile Include="Transaction.cpp" />
   </ItemGroup>
   <ItemGroup>
