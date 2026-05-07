@@ -30,6 +30,7 @@ private:
     int selectedStep;
     int selectedDomain;
     int activeField;
+    int domainScroll;
 
     bool restartApp;
 
@@ -106,6 +107,8 @@ private:
 
     void saveAnnualReport();
 
+    void exportAnnualReportToWord();
+
     void showAnnualReportWindow();
 
     void clearEverything();
@@ -139,6 +142,8 @@ private:
     void drawTopBar(sf::RenderWindow& window);
 
     void drawStepMenu(sf::RenderWindow& window);
+
+    void drawVerticalScrollBar(sf::RenderWindow& window, float x, float y, float height, int scrollValue, int maxScroll, int visibleRows, int totalRows);
 
 
 

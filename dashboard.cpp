@@ -4,6 +4,103 @@ using namespace std;
 
 
 
+
+static int setupDomainScroll = 0;
+static int leftDomainScroll = 0;
+static int liveDomainScroll = 0;
+static int reportDomainScroll = 0;
+
+
+
+static void keepScrollInside(int& scrollValue, int totalRows, int visibleRows)
+{
+    int maxScroll = totalRows - visibleRows;
+
+    if (maxScroll < 0)
+    {
+        maxScroll = 0;
+    }
+
+    if (scrollValue < 0)
+    {
+        scrollValue = 0;
+    }
+
+    if (scrollValue > maxScroll)
+    {
+        scrollValue = maxScroll;
+    }
+}
+
+
+
+static void moveScroll(int& scrollValue, float wheelDelta, int totalRows, int visibleRows)
+{
+    if (totalRows <= visibleRows)
+    {
+        scrollValue = 0;
+
+        return;
+    }
+
+    if (wheelDelta < 0)
+    {
+        scrollValue++;
+    }
+
+    if (wheelDelta > 0)
+    {
+        scrollValue--;
+    }
+
+    keepScrollInside(scrollValue, totalRows, visibleRows);
+}
+
+
+
+static void drawSimpleVerticalScrollBar(sf::RenderWindow& window, float x, float y, float height, int scrollValue, int totalRows, int visibleRows)
+{
+    if (totalRows <= visibleRows)
+    {
+        return;
+    }
+
+    int maxScroll = totalRows - visibleRows;
+
+    if (maxScroll <= 0)
+    {
+        return;
+    }
+
+    float knobHeight = height * (static_cast<float>(visibleRows) / static_cast<float>(totalRows));
+
+    if (knobHeight < 22)
+    {
+        knobHeight = 22;
+    }
+
+    float maxMove = height - knobHeight;
+    float knobY = y + (static_cast<float>(scrollValue) / static_cast<float>(maxScroll)) * maxMove;
+
+
+
+    sf::RectangleShape track({ 8, height });
+    track.setPosition({ x, y });
+    track.setFillColor(sf::Color(28, 28, 34));
+
+    window.draw(track);
+
+
+
+    sf::RectangleShape knob({ 8, knobHeight });
+    knob.setPosition({ x, knobY });
+    knob.setFillColor(sf::Color(45, 212, 191));
+
+    window.draw(knob);
+}
+
+
+
 // setup values and arrays
 Dashboard::Dashboard()
 {
@@ -41,6 +138,11 @@ Dashboard::Dashboard()
     selectedStep = 0;
     selectedDomain = 0;
     activeField = -1;
+
+    setupDomainScroll = 0;
+    leftDomainScroll = 0;
+    liveDomainScroll = 0;
+    reportDomainScroll = 0;
 
     restartApp = false;
 
@@ -662,17 +764,391 @@ void Dashboard::saveAnnualReport()
 
 
 
+// creates annual report file that opens in Microsoft Word
+void Dashboard::exportAnnualReportToWord()
+{
+    ofstream file;
+
+    file.open("Annual_Report.rtf");
+
+    if (file.is_open() == false)
+    {
+        cout << "Could not create Annual_Report.rtf" << endl;
+
+        return;
+    }
+
+
+
+    auto rtfText = [](string text) -> string
+        {
+            string fixedText = "";
+
+            for (int i = 0; i < text.length(); i++)
+            {
+                if (text[i] == '\\' || text[i] == '{' || text[i] == '}')
+                {
+                    fixedText = fixedText + "\\";
+                }
+
+                fixedText = fixedText + text[i];
+            }
+
+            return fixedText;
+        };
+
+
+
+    string borderCell = "\\clbrdrt\\brdrs\\brdrw10"
+        "\\clbrdrl\\brdrs\\brdrw10"
+        "\\clbrdrb\\brdrs\\brdrw10"
+        "\\clbrdrr\\brdrs\\brdrw10";
+
+
+
+    double totalSalary = 0;
+    double totalSpendLimit = 0;
+    double totalActual = 0;
+
+    int bestSavingMonth = 0;
+    int worstSavingMonth = 0;
+    int highestExpenseMonth = 0;
+    int lowestExpenseMonth = 0;
+
+
+
+    for (int i = 0; i < 12; i++)
+    {
+        double monthActual = getTotalActual(i);
+        double monthSavings = monthlySalary[i] - monthActual;
+
+        totalSalary = totalSalary + monthlySalary[i];
+        totalSpendLimit = totalSpendLimit + monthlySpendLimit[i];
+        totalActual = totalActual + monthActual;
+
+        if (monthSavings > monthlySalary[bestSavingMonth] - getTotalActual(bestSavingMonth))
+        {
+            bestSavingMonth = i;
+        }
+
+        if (monthSavings < monthlySalary[worstSavingMonth] - getTotalActual(worstSavingMonth))
+        {
+            worstSavingMonth = i;
+        }
+
+        if (monthActual > getTotalActual(highestExpenseMonth))
+        {
+            highestExpenseMonth = i;
+        }
+
+        if (monthActual < getTotalActual(lowestExpenseMonth))
+        {
+            lowestExpenseMonth = i;
+        }
+    }
+
+
+
+    double totalSavings = totalSalary - totalActual;
+
+    string yearlyStatus = "Within yearly spending limit";
+
+    if (totalSpendLimit <= 0)
+    {
+        yearlyStatus = "No yearly spending limit entered";
+    }
+    else if (totalActual > totalSpendLimit)
+    {
+        yearlyStatus = "Over yearly spending limit";
+    }
+
+
+
+    file << "{\\rtf1\\ansi\\deff0\\landscape\\paperw15840\\paperh12240\\margl720\\margr720\\margt720\\margb720\n";
+    file << "{\\fonttbl{\\f0 Arial;}}\n";
+    file << "\\f0\\fs22\n";
+
+
+
+    file << "\\pard\\qc\\fs36\\b Annual Financial Report\\b0\\fs22\\par\\par\n";
+
+
+
+    file << "\\pard\\ql\\fs24\\b 1. User Information\\b0\\fs22\\par\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx3500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl\\b Name\\b0\\cell ";
+    file << "\\pard\\intbl " << rtfText(userName) << "\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx3500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl\\b Report Type\\b0\\cell ";
+    file << "\\pard\\intbl Annual Financial Summary\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx3500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl\\b Generated By\\b0\\cell ";
+    file << "\\pard\\intbl Financial Management System\\cell\\row\n";
+
+    file << "\\pard\\par\n";
+
+
+
+    file << "\\pard\\ql\\fs24\\b 2. Annual Summary\\b0\\fs22\\par\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx5000";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl\\b Item\\b0\\cell ";
+    file << "\\pard\\intbl\\b Amount / Status\\b0\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx5000";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Total Yearly Salary\\cell ";
+    file << "\\pard\\intbl " << rtfText(money(totalSalary)) << "\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx5000";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Total Yearly Spend Limit\\cell ";
+    file << "\\pard\\intbl " << rtfText(money(totalSpendLimit)) << "\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx5000";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Total Yearly Actual Spending\\cell ";
+    file << "\\pard\\intbl " << rtfText(money(totalActual)) << "\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx5000";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Total Yearly Savings\\cell ";
+    file << "\\pard\\intbl " << rtfText(money(totalSavings)) << "\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx5000";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Overall Financial Status\\cell ";
+    file << "\\pard\\intbl " << yearlyStatus << "\\cell\\row\n";
+
+    file << "\\pard\\par\n";
+
+
+
+    file << "\\pard\\ql\\fs24\\b 3. Monthly Breakdown\\b0\\fs22\\par\n";
+    file << "\\fs18\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx1200";
+    file << borderCell << "\\cellx3500";
+    file << borderCell << "\\cellx5800";
+    file << borderCell << "\\cellx8100";
+    file << borderCell << "\\cellx10400";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl\\b Month\\b0\\cell ";
+    file << "\\pard\\intbl\\b Salary\\b0\\cell ";
+    file << "\\pard\\intbl\\b Spend Limit\\b0\\cell ";
+    file << "\\pard\\intbl\\b Actual Spend\\b0\\cell ";
+    file << "\\pard\\intbl\\b Savings\\b0\\cell ";
+    file << "\\pard\\intbl\\b Status\\b0\\cell\\row\n";
+
+    for (int i = 0; i < 12; i++)
+    {
+        double monthActual = getTotalActual(i);
+        double monthSavings = monthlySalary[i] - monthActual;
+
+        string monthStatus = "Under Budget";
+
+        if (monthlySalary[i] == 0 && monthlySpendLimit[i] == 0 && monthActual == 0)
+        {
+            monthStatus = "No Data";
+        }
+        else if (monthActual > monthlySpendLimit[i])
+        {
+            monthStatus = "Over Budget";
+        }
+
+        file << "\\trowd\\trgaph108\\trleft0\\trrh330\n";
+        file << borderCell << "\\cellx1200";
+        file << borderCell << "\\cellx3500";
+        file << borderCell << "\\cellx5800";
+        file << borderCell << "\\cellx8100";
+        file << borderCell << "\\cellx10400";
+        file << borderCell << "\\cellx13000\n";
+
+        file << "\\pard\\intbl " << getMonthName(i) << "\\cell ";
+        file << "\\pard\\intbl " << rtfText(money(monthlySalary[i])) << "\\cell ";
+        file << "\\pard\\intbl " << rtfText(money(monthlySpendLimit[i])) << "\\cell ";
+        file << "\\pard\\intbl " << rtfText(money(monthActual)) << "\\cell ";
+        file << "\\pard\\intbl " << rtfText(money(monthSavings)) << "\\cell ";
+        file << "\\pard\\intbl " << monthStatus << "\\cell\\row\n";
+    }
+
+    file << "\\pard\\fs22\\par\n";
+
+
+
+    file << "\\pard\\ql\\fs24\\b 4. Best and Worst Month\\b0\\fs22\\par\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx4500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl\\b Metric\\b0\\cell ";
+    file << "\\pard\\intbl\\b Result\\b0\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx4500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Best Saving Month\\cell ";
+    file << "\\pard\\intbl " << getMonthName(bestSavingMonth) << " with " << rtfText(money(monthlySalary[bestSavingMonth] - getTotalActual(bestSavingMonth))) << " savings\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx4500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Weakest Saving Month\\cell ";
+    file << "\\pard\\intbl " << getMonthName(worstSavingMonth) << " with " << rtfText(money(monthlySalary[worstSavingMonth] - getTotalActual(worstSavingMonth))) << " savings\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx4500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Highest Expense Month\\cell ";
+    file << "\\pard\\intbl " << getMonthName(highestExpenseMonth) << " with " << rtfText(money(getTotalActual(highestExpenseMonth))) << " actual spending\\cell\\row\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx4500";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl Lowest Expense Month\\cell ";
+    file << "\\pard\\intbl " << getMonthName(lowestExpenseMonth) << " with " << rtfText(money(getTotalActual(lowestExpenseMonth))) << " actual spending\\cell\\row\n";
+
+    file << "\\pard\\par\n";
+
+
+
+    file << "\\pard\\ql\\fs24\\b 5. Category Wise Annual Spending\\b0\\fs22\\par\n";
+    file << "\\fs18\n";
+
+    file << "\\trowd\\trgaph108\\trleft0\\trrh360\n";
+    file << borderCell << "\\cellx2600";
+    file << borderCell << "\\cellx5200";
+    file << borderCell << "\\cellx7800";
+    file << borderCell << "\\cellx10400";
+    file << borderCell << "\\cellx13000\n";
+    file << "\\pard\\intbl\\b Category\\b0\\cell ";
+    file << "\\pard\\intbl\\b Annual Limit\\b0\\cell ";
+    file << "\\pard\\intbl\\b Annual Actual\\b0\\cell ";
+    file << "\\pard\\intbl\\b Difference\\b0\\cell ";
+    file << "\\pard\\intbl\\b Status\\b0\\cell\\row\n";
+
+    for (int i = 0; i < domainCount; i++)
+    {
+        double annualActual = 0;
+        double annualLimit = domainLimit[i] * 12;
+
+        for (int j = 0; j < 12; j++)
+        {
+            annualActual = annualActual + actualSpend[j][i];
+        }
+
+        string categoryStatus = "Within Limit";
+
+        if (annualActual > annualLimit)
+        {
+            categoryStatus = "Over Limit";
+        }
+
+        file << "\\trowd\\trgaph108\\trleft0\\trrh330\n";
+        file << borderCell << "\\cellx2600";
+        file << borderCell << "\\cellx5200";
+        file << borderCell << "\\cellx7800";
+        file << borderCell << "\\cellx10400";
+        file << borderCell << "\\cellx13000\n";
+
+        file << "\\pard\\intbl " << rtfText(domainName[i]) << "\\cell ";
+        file << "\\pard\\intbl " << rtfText(money(annualLimit)) << "\\cell ";
+        file << "\\pard\\intbl " << rtfText(money(annualActual)) << "\\cell ";
+        file << "\\pard\\intbl " << rtfText(money(annualLimit - annualActual)) << "\\cell ";
+        file << "\\pard\\intbl " << categoryStatus << "\\cell\\row\n";
+    }
+
+    file << "\\pard\\fs22\\par\n";
+
+
+
+    file << "\\pard\\ql\\fs24\\b 6. Spending Analysis\\b0\\fs22\\par\n";
+
+    file << "The highest spending was recorded in " << getMonthName(highestExpenseMonth) << ".\\par\n";
+    file << "The best saving performance was recorded in " << getMonthName(bestSavingMonth) << ".\\par\n";
+
+    if (totalSavings >= 0)
+    {
+        file << "Overall, the yearly record shows positive savings after total spending.\\par\\par\n";
+    }
+    else
+    {
+        file << "Overall, the yearly record shows spending greater than total salary.\\par\\par\n";
+    }
+
+
+
+    file << "\\pard\\ql\\fs24\\b 7. Final Remarks\\b0\\fs22\\par\n";
+    file << "This annual report provides a complete overview of salary, spending limits, actual expenses, savings, and category-wise financial performance.\\par\n";
+    file << "It can be used to review spending habits, compare monthly performance, and improve future budgeting decisions.\\par\\par\n";
+
+    file << "\\i Report generated by Financial Management System.\\i0\\par\n";
+
+    file << "}";
+
+    file.close();
+
+    cout << "Annual Word report generated successfully." << endl;
+}
+
+
+
+
+
 // shows annual report in a separate window
 void Dashboard::showAnnualReportWindow()
 {
-    sf::RenderWindow reportWindow(sf::VideoMode({ 1100, 790 }), "Annual Report");
+    sf::RenderWindow reportWindow(sf::VideoMode({ 1180, 900 }), "Annual Report");
 
     reportWindow.setFramerateLimit(60);
 
 
 
+    bool annualReportDownloaded = false;
+
+    int categoryScroll = 0;
+    int visibleCategoryRows = 5;
+
+
+
     while (reportWindow.isOpen())
     {
+        int maxCategoryScroll = domainCount - visibleCategoryRows;
+
+        if (maxCategoryScroll < 0)
+        {
+            maxCategoryScroll = 0;
+        }
+
+        if (categoryScroll < 0)
+        {
+            categoryScroll = 0;
+        }
+
+        if (categoryScroll > maxCategoryScroll)
+        {
+            categoryScroll = maxCategoryScroll;
+        }
+
+
+
         while (const optional<sf::Event> event = reportWindow.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
@@ -692,6 +1168,36 @@ void Dashboard::showAnnualReportWindow()
 
 
 
+            if (const auto* wheel = event->getIf<sf::Event::MouseWheelScrolled>())
+            {
+                if (domainCount > visibleCategoryRows)
+                {
+                    if (wheel->delta < 0)
+                    {
+                        categoryScroll++;
+                    }
+
+                    if (wheel->delta > 0)
+                    {
+                        categoryScroll--;
+                    }
+
+
+
+                    if (categoryScroll < 0)
+                    {
+                        categoryScroll = 0;
+                    }
+
+                    if (categoryScroll > maxCategoryScroll)
+                    {
+                        categoryScroll = maxCategoryScroll;
+                    }
+                }
+            }
+
+
+
             if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>())
             {
                 if (mouse->button == sf::Mouse::Button::Left)
@@ -699,7 +1205,18 @@ void Dashboard::showAnnualReportWindow()
                     float mx = static_cast<float>(mouse->position.x);
                     float my = static_cast<float>(mouse->position.y);
 
-                    if (isInside(mx, my, 860, 710, 170, 42))
+
+
+                    if (isInside(mx, my, 940, 770, 190, 42))
+                    {
+                        exportAnnualReportToWord();
+
+                        annualReportDownloaded = true;
+                    }
+
+
+
+                    if (isInside(mx, my, 940, 825, 190, 42))
                     {
                         reportWindow.close();
                     }
@@ -713,9 +1230,9 @@ void Dashboard::showAnnualReportWindow()
 
 
 
-        drawPanel(reportWindow, 30, 30, 1040, 730);
+        drawPanel(reportWindow, 30, 30, 1120, 840);
 
-        drawRoundFill(reportWindow, 30, 30, 1040, 3, 1, sf::Color(45, 212, 191));
+        drawRoundFill(reportWindow, 30, 30, 1120, 3, 1, sf::Color(45, 212, 191));
 
 
 
@@ -789,7 +1306,7 @@ void Dashboard::showAnnualReportWindow()
 
 
 
-            sf::RectangleShape row({ 790, 22 });
+            sf::RectangleShape row({ 850, 22 });
             row.setPosition({ 60, y });
             row.setFillColor(sf::Color(5, 5, 7));
             row.setOutlineThickness(1);
@@ -812,22 +1329,63 @@ void Dashboard::showAnnualReportWindow()
 
 
 
-        drawText(reportWindow, "Category Wise Annual Spending", 20, 60, 670, sf::Color(246, 247, 250), true);
+        drawText(reportWindow, "Category Wise Annual Spending", 20, 60, 690, sf::Color(246, 247, 250), true);
 
 
 
-        int count = domainCount;
-
-        if (count > 4)
+        if (domainCount > visibleCategoryRows)
         {
-            count = 4;
+            drawText(reportWindow, "Use mouse wheel to scroll categories", 11, 360, 697, sf::Color(160, 165, 176), false);
         }
 
 
 
-        for (int i = 0; i < count; i++)
+        sf::RectangleShape headingRow({ 850, 24 });
+        headingRow.setPosition({ 60, 723 });
+        headingRow.setFillColor(sf::Color(17, 17, 20));
+        headingRow.setOutlineThickness(1);
+        headingRow.setOutlineColor(sf::Color(63, 63, 70));
+
+        reportWindow.draw(headingRow);
+
+
+
+        drawText(reportWindow, "Category", 12, 70, 728, sf::Color(160, 165, 176), true);
+        drawText(reportWindow, "Annual Limit", 12, 270, 728, sf::Color(160, 165, 176), true);
+        drawText(reportWindow, "Annual Actual", 12, 460, 728, sf::Color(160, 165, 176), true);
+        drawText(reportWindow, "Difference", 12, 655, 728, sf::Color(160, 165, 176), true);
+        drawText(reportWindow, "Status", 12, 800, 728, sf::Color(160, 165, 176), true);
+
+
+
+        int endCategory = categoryScroll + visibleCategoryRows;
+
+        if (endCategory > domainCount)
         {
+            endCategory = domainCount;
+        }
+
+
+
+        if (domainCount == 0)
+        {
+            drawText(reportWindow, "No categories added.", 13, 70, 762, sf::Color(130, 135, 145), false);
+        }
+
+
+
+        for (int i = categoryScroll; i < endCategory; i++)
+        {
+            int rowIndex = i - categoryScroll;
+
+            float y = static_cast<float>(747 + rowIndex * 24);
+
+
+
             double annualActual = 0;
+            double annualLimit = domainLimit[i] * 12;
+
+
 
             for (int j = 0; j < 12; j++)
             {
@@ -836,18 +1394,81 @@ void Dashboard::showAnnualReportWindow()
 
 
 
-            float x = static_cast<float>(60 + i * 190);
+            double difference = annualLimit - annualActual;
+
+            string status = "Within Limit";
+
+            sf::Color statusColor = sf::Color(52, 211, 153);
 
 
 
-            drawText(reportWindow, shortText(domainName[i], 13), 12, x, 702, sf::Color(246, 247, 250), true);
+            if (difference < 0)
+            {
+                status = "Over Limit";
+                statusColor = sf::Color(255, 77, 141);
+            }
 
-            drawText(reportWindow, money(annualActual), 12, x, 724, sf::Color(160, 165, 176), false);
+
+
+            sf::RectangleShape row({ 850, 23 });
+            row.setPosition({ 60, y });
+            row.setFillColor(sf::Color(5, 5, 7));
+            row.setOutlineThickness(1);
+            row.setOutlineColor(sf::Color(42, 42, 48));
+
+            reportWindow.draw(row);
+
+
+
+            drawText(reportWindow, shortText(domainName[i], 16), 12, 70, y + 4, sf::Color(246, 247, 250), true);
+
+            drawText(reportWindow, money(annualLimit), 12, 270, y + 4, sf::Color(218, 220, 226), false);
+
+            drawText(reportWindow, money(annualActual), 12, 460, y + 4, sf::Color(218, 220, 226), false);
+
+            drawText(reportWindow, money(difference), 12, 655, y + 4, difference < 0 ? sf::Color(255, 77, 141) : sf::Color(52, 211, 153), false);
+
+            drawText(reportWindow, status, 12, 800, y + 4, statusColor, false);
         }
 
 
 
-        drawButton(reportWindow, 860, 710, 170, 42, "Close", false);
+        if (domainCount > visibleCategoryRows)
+        {
+            float trackX = 920;
+            float trackY = 747;
+            float trackH = static_cast<float>(visibleCategoryRows * 24);
+            float knobH = trackH * (static_cast<float>(visibleCategoryRows) / static_cast<float>(domainCount));
+
+            if (knobH < 22)
+            {
+                knobH = 22;
+            }
+
+            float maxMove = trackH - knobH;
+            float knobY = trackY;
+
+            if (maxCategoryScroll > 0)
+            {
+                knobY = trackY + (static_cast<float>(categoryScroll) / static_cast<float>(maxCategoryScroll)) * maxMove;
+            }
+
+            drawRoundFill(reportWindow, trackX, trackY, 8, trackH, 4, sf::Color(28, 28, 34));
+            drawRoundFill(reportWindow, trackX, knobY, 8, knobH, 4, sf::Color(45, 212, 191));
+        }
+
+
+
+        if (annualReportDownloaded == true)
+        {
+            drawText(reportWindow, "Saved as Annual_Report.rtf", 11, 940, 740, sf::Color(52, 211, 153), false);
+        }
+
+
+
+        drawButton(reportWindow, 940, 770, 190, 42, "Download Report", true);
+
+        drawButton(reportWindow, 940, 825, 190, 42, "Close", false);
 
 
 
@@ -891,6 +1512,10 @@ void Dashboard::clearEverything()
     selectedMonth = 0;
     selectedStep = 0;
     selectedDomain = 0;
+    setupDomainScroll = 0;
+    leftDomainScroll = 0;
+    liveDomainScroll = 0;
+    reportDomainScroll = 0;
 
 
 
@@ -1137,6 +1762,7 @@ void Dashboard::drawButton(sf::RenderWindow& window, float x, float y, float wid
 
 
 // input fields
+// input fields
 void Dashboard::drawInputBox(sf::RenderWindow& window, float x, float y, float width, float height, string label, string value, bool selected)
 {
     sf::Color border = sf::Color(58, 58, 65);
@@ -1162,7 +1788,16 @@ void Dashboard::drawInputBox(sf::RenderWindow& window, float x, float y, float w
 
     if (selected == true)
     {
-        shown = shown + "|";
+        static sf::Clock blinkClock;
+
+        float time = blinkClock.getElapsedTime().asSeconds();
+
+        int blink = static_cast<int>(time * 2);
+
+        if (blink % 2 == 0)
+        {
+            shown = shown + "|";
+        }
     }
 
 
@@ -1410,6 +2045,10 @@ bool Dashboard::runDomainWindow()
 
     while (window.isOpen())
     {
+        keepScrollInside(setupDomainScroll, domainCount, 10);
+
+
+
         while (const optional<sf::Event> event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
@@ -1417,6 +2056,13 @@ bool Dashboard::runDomainWindow()
                 window.close();
 
                 return false;
+            }
+
+
+
+            if (const auto* wheel = event->getIf<sf::Event::MouseWheelScrolled>())
+            {
+                moveScroll(setupDomainScroll, wheel->delta, domainCount, 10);
             }
 
 
@@ -1474,6 +2120,8 @@ bool Dashboard::runDomainWindow()
                         activeField = 0;
 
                         saveDomains();
+
+                        keepScrollInside(setupDomainScroll, domainCount, 10);
                     }
                 }
             }
@@ -1518,6 +2166,8 @@ bool Dashboard::runDomainWindow()
                             activeField = 0;
 
                             saveDomains();
+
+                            keepScrollInside(setupDomainScroll, domainCount, 10);
                         }
                     }
 
@@ -1576,27 +2226,30 @@ bool Dashboard::runDomainWindow()
 
 
 
-        int count = domainCount;
+        int visibleRows = 10;
 
+        int startIndex = setupDomainScroll;
+        int endIndex = startIndex + visibleRows;
 
-
-        if (count > 10)
+        if (endIndex > domainCount)
         {
-            count = 10;
+            endIndex = domainCount;
         }
 
 
 
-        if (count == 0)
+        if (domainCount == 0)
         {
             drawText(window, "No domains added yet.", 15, 510, 278, sf::Color(120, 125, 135), false);
         }
 
 
 
-        for (int i = 0; i < count; i++)
+        for (int i = startIndex; i < endIndex; i++)
         {
-            float y = static_cast<float>(270 + i * 34);
+            int rowIndex = i - startIndex;
+
+            float y = static_cast<float>(270 + rowIndex * 34);
 
 
 
@@ -1605,6 +2258,17 @@ bool Dashboard::runDomainWindow()
             drawText(window, shortText(domainName[i], 22), 13, 528, y + 6, sf::Color(246, 247, 250), true);
 
             drawText(window, money(domainLimit[i]), 13, 760, y + 6, sf::Color(160, 165, 176), false);
+        }
+
+
+
+        drawSimpleVerticalScrollBar(window, 902, 270, 340, setupDomainScroll, domainCount, visibleRows);
+
+
+
+        if (domainCount > visibleRows)
+        {
+            drawText(window, "Mouse wheel to scroll", 11, 510, 628, sf::Color(130, 135, 145), false);
         }
 
 
@@ -1703,6 +2367,33 @@ void Dashboard::runMainWindow()
 
 
 
+            if (const auto* wheel = event->getIf<sf::Event::MouseWheelScrolled>())
+            {
+                if (selectedStep == 0)
+                {
+                    moveScroll(liveDomainScroll, wheel->delta, domainCount, 5);
+                }
+
+                if (selectedStep == 1)
+                {
+                    moveScroll(leftDomainScroll, wheel->delta, domainCount, 8);
+                    moveScroll(liveDomainScroll, wheel->delta, domainCount, 5);
+                }
+
+                if (selectedStep == 2)
+                {
+                    moveScroll(leftDomainScroll, wheel->delta, domainCount, 6);
+                    moveScroll(liveDomainScroll, wheel->delta, domainCount, 5);
+                }
+
+                if (selectedStep == 3)
+                {
+                    moveScroll(reportDomainScroll, wheel->delta, domainCount, 5);
+                }
+            }
+
+
+
             if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>())
             {
                 if (mouse->button == sf::Mouse::Button::Left)
@@ -1782,26 +2473,49 @@ void Dashboard::drawLimitPanel(sf::RenderWindow& window)
 
 
 
-    int count = domainCount;
+    int visibleRows = 8;
 
+    keepScrollInside(leftDomainScroll, domainCount, visibleRows);
 
+    int startIndex = leftDomainScroll;
+    int endIndex = startIndex + visibleRows;
 
-    if (count > 8)
+    if (endIndex > domainCount)
     {
-        count = 8;
+        endIndex = domainCount;
     }
 
 
 
-    for (int i = 0; i < count; i++)
+    if (domainCount == 0)
     {
-        float y = static_cast<float>(490 + i * 36);
+        drawText(window, "No domains added yet.", 14, 54, 492, sf::Color(120, 125, 135), false);
+    }
+
+
+
+    for (int i = startIndex; i < endIndex; i++)
+    {
+        int rowIndex = i - startIndex;
+
+        float y = static_cast<float>(490 + rowIndex * 36);
 
         drawRoundBox(window, 54, y, 340, 30, 15, sf::Color(4, 4, 6), sf::Color(48, 48, 55));
 
         drawText(window, shortText(domainName[i], 18), 13, 70, y + 6, sf::Color(246, 247, 250), true);
 
         drawText(window, money(domainLimit[i]), 13, 265, y + 6, sf::Color(160, 165, 176), false);
+    }
+
+
+
+    drawSimpleVerticalScrollBar(window, 405, 490, 288, leftDomainScroll, domainCount, visibleRows);
+
+
+
+    if (domainCount > visibleRows)
+    {
+        drawText(window, "Mouse wheel to scroll", 11, 54, 782, sf::Color(130, 135, 145), false);
     }
 
 
@@ -1838,26 +2552,42 @@ void Dashboard::drawActualPanel(sf::RenderWindow& window)
 
 
 
-    int count = domainCount;
-
-
-
-    if (count > 6)
-    {
-        count = 6;
-    }
-
-
-
     drawText(window, "Choose Category", 14, 54, 440, sf::Color(160, 165, 176), false);
 
 
 
-    for (int i = 0; i < count; i++)
+    int visibleRows = 6;
+
+    keepScrollInside(leftDomainScroll, domainCount, visibleRows);
+
+    int startIndex = leftDomainScroll;
+    int endIndex = startIndex + visibleRows;
+
+    if (endIndex > domainCount)
     {
-        float y = static_cast<float>(468 + i * 42);
+        endIndex = domainCount;
+    }
+
+
+
+    for (int i = startIndex; i < endIndex; i++)
+    {
+        int rowIndex = i - startIndex;
+
+        float y = static_cast<float>(468 + rowIndex * 42);
 
         drawButton(window, 54, y, 340, 34, shortText(domainName[i], 28), selectedDomain == i);
+    }
+
+
+
+    drawSimpleVerticalScrollBar(window, 405, 468, 244, leftDomainScroll, domainCount, visibleRows);
+
+
+
+    if (domainCount > visibleRows)
+    {
+        drawText(window, "Mouse wheel to scroll", 11, 54, 716, sf::Color(130, 135, 145), false);
     }
 
 
@@ -1926,19 +2656,24 @@ void Dashboard::drawReportPanel(sf::RenderWindow& window)
 
 
 
-    int count = domainCount;
+    int visibleRows = 5;
 
+    keepScrollInside(reportDomainScroll, domainCount, visibleRows);
 
+    int startIndex = reportDomainScroll;
+    int endIndex = startIndex + visibleRows;
 
-    if (count > 5)
+    if (endIndex > domainCount)
     {
-        count = 5;
+        endIndex = domainCount;
     }
 
 
 
-    for (int i = 0; i < count; i++)
+    for (int i = startIndex; i < endIndex; i++)
     {
+        int rowIndex = i - startIndex;
+
         double bLimit = domainLimit[i];
         double actual = actualSpend[selectedMonth][i];
         double variance = bLimit - actual;
@@ -1967,7 +2702,7 @@ void Dashboard::drawReportPanel(sf::RenderWindow& window)
 
 
 
-        float y = static_cast<float>(570 + i * 36);
+        float y = static_cast<float>(570 + rowIndex * 36);
 
 
 
@@ -1990,6 +2725,17 @@ void Dashboard::drawReportPanel(sf::RenderWindow& window)
         drawText(window, varianceText, 13, 982, y + 8, varianceColor, false);
 
         drawText(window, percentText(percent), 13, 1190, y + 8, sf::Color(160, 165, 176), false);
+    }
+
+
+
+    drawSimpleVerticalScrollBar(window, 1295, 570, 178, reportDomainScroll, domainCount, visibleRows);
+
+
+
+    if (domainCount > visibleRows)
+    {
+        drawText(window, "Mouse wheel to scroll", 11, 496, 748, sf::Color(130, 135, 145), false);
     }
 
 
@@ -2121,19 +2867,24 @@ void Dashboard::drawDashboard(sf::RenderWindow& window)
 
 
 
-        int count = domainCount;
+        int visibleRows = 5;
 
+        keepScrollInside(liveDomainScroll, domainCount, visibleRows);
 
+        int startIndex = liveDomainScroll;
+        int endIndex = startIndex + visibleRows;
 
-        if (count > 5)
+        if (endIndex > domainCount)
         {
-            count = 5;
+            endIndex = domainCount;
         }
 
 
 
-        for (int i = 0; i < count; i++)
+        for (int i = startIndex; i < endIndex; i++)
         {
+            int rowIndex = i - startIndex;
+
             double ratio = 0;
 
 
@@ -2160,7 +2911,7 @@ void Dashboard::drawDashboard(sf::RenderWindow& window)
 
 
 
-            float y = static_cast<float>(580 + i * 50);
+            float y = static_cast<float>(580 + rowIndex * 50);
 
 
 
@@ -2169,6 +2920,17 @@ void Dashboard::drawDashboard(sf::RenderWindow& window)
             drawText(window, money(actualSpend[selectedMonth][i]) + " / " + money(domainLimit[i]), 13, 1050, y, sf::Color(160, 165, 176), false);
 
             drawBar(window, 496, y + 28, 780, 10, ratio, color);
+        }
+
+
+
+        drawSimpleVerticalScrollBar(window, 1295, 580, 250, liveDomainScroll, domainCount, visibleRows);
+
+
+
+        if (domainCount > visibleRows)
+        {
+            drawText(window, "Mouse wheel to scroll", 11, 496, 840, sf::Color(130, 135, 145), false);
         }
     }
 }
@@ -2198,6 +2960,9 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
         if (isInside(mouseX, mouseY, 30 + i * 318, 228, 302, 42))
         {
             selectedStep = i;
+            leftDomainScroll = 0;
+            liveDomainScroll = 0;
+            reportDomainScroll = 0;
 
             return;
         }
@@ -2291,20 +3056,25 @@ void Dashboard::handleMainMouse(float mouseX, float mouseY, sf::RenderWindow& wi
 
     if (selectedStep == 2)
     {
-        int count = domainCount;
+        int visibleRows = 6;
 
+        keepScrollInside(leftDomainScroll, domainCount, visibleRows);
 
+        int startIndex = leftDomainScroll;
+        int endIndex = startIndex + visibleRows;
 
-        if (count > 6)
+        if (endIndex > domainCount)
         {
-            count = 6;
+            endIndex = domainCount;
         }
 
 
 
-        for (int i = 0; i < count; i++)
+        for (int i = startIndex; i < endIndex; i++)
         {
-            float y = static_cast<float>(468 + i * 42);
+            int rowIndex = i - startIndex;
+
+            float y = static_cast<float>(468 + rowIndex * 42);
 
             if (isInside(mouseX, mouseY, 54, y, 340, 34))
             {
